@@ -1,16 +1,20 @@
 package uk.co.prodapt.inventory.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.lang.Nullable;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -38,11 +42,7 @@ public class InventoryController {
         this.productService = productService;
     }
 
-    @ApiResponse(responseCode = "200", description = "Returns list of all products", content = @Content(array = @ArraySchema(schema = @Schema(implementation = Product.class))))
-    @GetMapping
-    public List<Product> list() {
-        return productService.getAll();
-    }
+
 
     @ApiResponse(responseCode = "200", description = "Product returned", content = @Content(schema = @Schema(implementation = Product.class)))
     @GetMapping("/{id}")
@@ -68,5 +68,24 @@ public class InventoryController {
     @DeleteMapping("/{id}")
     public void delete(@PathVariable Integer id) {
         productService.delete(id);
+    }
+
+    @Operation(summary = "Get all products with optional availability filter",
+            description = "Returns list of products. Can be filtered to show only in-stock products.")
+    @ApiResponse(responseCode = "200", description = "Returns filtered list of products",
+            content = @Content(array = @ArraySchema(schema = @Schema(implementation = Product.class))))
+    @GetMapping
+    public List<Product> list(
+            @Parameter(description = "Filter to show only available products (optional)")
+            @RequestParam(required = false) Boolean showOnlyAvailable) {
+        List<Product> products = productService.getAll();
+
+        if (Boolean.TRUE.equals(showOnlyAvailable)) {
+            return products.stream()
+                    .filter(Product::isAvailable)
+                    .collect(Collectors.toList());
+        }
+
+        return products;
     }
 }
