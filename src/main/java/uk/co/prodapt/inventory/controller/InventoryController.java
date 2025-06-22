@@ -77,15 +77,8 @@ public class InventoryController {
     @GetMapping
     public List<Product> list(
             @Parameter(description = "Filter to show only available products (optional)")
-            @RequestParam(required = false) Boolean showOnlyAvailable) {
-        List<Product> products = productService.getAll();
-
-        if (Boolean.TRUE.equals(showOnlyAvailable)) {
-            return products.stream()
-                    .filter(Product::isAvailable)
-                    .collect(Collectors.toList());
-        }
-
-        return products;
+            @RequestParam(required = false) @Nullable Boolean showOnlyAvailable) {
+        return productService.getAllDedupedAndFiltered(showOnlyAvailable);
     }
+
 }

@@ -3,6 +3,8 @@ package uk.co.prodapt.inventory.service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.co.prodapt.inventory.model.Product;
@@ -69,5 +71,27 @@ public class ProductService {
             }
         }
         return product;
+    }
+
+    public List<Product> getAllDedupedAndFiltered(Boolean showOnlyAvailable) {
+        List<Product> products = getAll();
+
+        // Deduplicate by product id
+        List<Product> deduped = new ArrayList<>(products.stream()
+                .filter(p -> p != null && p.getId() != null)
+                .collect(Collectors.toMap(
+                        Product::getId, // Use product ID as key
+                        p -> p, // Use the product itself as value
+                        (existing, replacement) -> existing, // Keep the first occurrence
+                        java.util.LinkedHashMap::new // LinkedHashMap to maintain insertion order
+                ))
+                .values()); // Collect values back to a list
+
+        if (Boolean.TRUE.equals(showOnlyAvailable)) { // Filter to show only available products
+            return deduped.stream()
+                    .filter(Product::isAvailable)
+                    .collect(Collectors.toList());
+        }
+        return deduped;
     }
 }

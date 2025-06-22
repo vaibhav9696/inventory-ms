@@ -1,9 +1,18 @@
 package uk.co.prodapt.inventory.model;
 
-public class Product {
+import io.swagger.v3.oas.annotations.media.Schema;
+
+import java.io.Serializable;
+
+public class Product implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     private Integer id;
     private String name;
+
+    @Schema(description = "Indicates if the product is currently in stock")
     private boolean available;
+
     private Integer supplierId; // ID of the supplier
     private String supplierName; // Name of the supplier
 
@@ -54,5 +63,18 @@ public class Product {
 
     public void setSupplierName(String supplierName) {
         this.supplierName = supplierName;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Product product = (Product) o;
+        return id != null && id.equals(product.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return id != null ? id.hashCode() : 0;
     }
 }
